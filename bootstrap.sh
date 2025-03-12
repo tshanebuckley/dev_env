@@ -101,48 +101,49 @@ FLOX_SBIN=$FLOX_DEV/sbin
 # Get the PATH to our flox executable
 FLOX_PATH="${LOCAL_FLOX_BIN}:${FLOX_BIN}:${FLOX_SBIN}" #:/usr/sbin:/usr/bin
 
+# if the HOME's .bashrc file does not exist, then we run the bootstrap
+if [ ! -f $BASHRC ]; then
+    mkdir -p $VENV_HOME
+    mkdir -p $VENV_HOME/.local
+
+    # Make the bin path if it doesn't exist
+    mkdir -p $LOCAL_FLOX_BIN
+    
+    # Make the expected default XDG Base Directory Specification paths
+    # https://specifications.freedesktop.org/basedir-spec/latest/
+    mkdir -p $VENV_HOME/.local/share # -> make $XDG_DATA_HOME
+    mkdir -p $VENV_HOME/.config # -> $XDG_CONFIG_HOME
+    mkdir -p $VENV_HOME/.local/state # -> $XDG_STATE_HOME
+    mkdir -p $VENV_HOME/.cache # -> $XDG_CACHE_HOME
+    # Create and set the $XDG_RUNTIME_DIR
+    XDG_RT_DIR=$VENV_HOME/runtime
+    mkdir -p $XDG_RT_DIR
+    chmod 700 $XDG_RT_DIR 
+
+    # Create a variables file for the new .bashrc to source to pass over
+    # the flox path and set the HOME directory and XDG_RUNTIME_DIR
+    touch $VARIABLES_FILE
+    echo "export LC_ALL=C" >> $VARIABLES_FILE
+    echo "export USER=${USER}" >> $VARIABLES_FILE
+    echo "export HOME=${VENV_HOME}" >> $VARIABLES_FILE
+    echo "export PATH=${FLOX_PATH}" >> $VARIABLES_FILE
+    echo "export XDG_RUNTIME_DIR=${XDG_RT_DIR}" >> $VARIABLES_FILE
+    echo "export OS_NAME=${os_name}" >> $VARIABLES_FILE
+    echo "export OS_ARCHITECTURE=${OS_ARCHITECTURE}" >> $VARIABLES_FILE
+    echo "export ARCHITECTURE=${architecture}" >> $VARIABLES_FILE
+    echo "export FLOX_TARGET=${FLOX_TARGET}" >> $VARIABLES_FILE
+    echo "export WSL=${WSL}" >> $VARIABLES_FILE
+    echo "export DOTFILES=${DOTFILES}" >> $VARIABLES_FILE
+    echo "export BASE_HOME=${HOME}" >> $VARIABLES_FILE
+    # Copy over the .bashrc file
+    cp "$ORIGINAL_BASHRC" "$VENV_HOME"
+fi
+
 # if a bootstrap has already been run for this system, we skip execution
 BS_LOCK="$PWD/bs.lock"
 if [ -f "$BS_LOCK" ]; then
     echo "Bootstrap has already been executed. Delete the bs.lock file to re-run."
 else
-    # if the HOME's .bashrc file does not exist, then we run the bootstrap
-    if [ ! -f $BASHRC ]; then
-        mkdir -p $VENV_HOME
-        mkdir -p $VENV_HOME/.local
-
-        # Make the bin path if it doesn't exist
-        mkdir -p $LOCAL_FLOX_BIN
-        
-        # Make the expected default XDG Base Directory Specification paths
-        # https://specifications.freedesktop.org/basedir-spec/latest/
-        mkdir -p $VENV_HOME/.local/share # -> make $XDG_DATA_HOME
-        mkdir -p $VENV_HOME/.config # -> $XDG_CONFIG_HOME
-        mkdir -p $VENV_HOME/.local/state # -> $XDG_STATE_HOME
-        mkdir -p $VENV_HOME/.cache # -> $XDG_CACHE_HOME
-        # Create and set the $XDG_RUNTIME_DIR
-        XDG_RT_DIR=$VENV_HOME/runtime
-        mkdir -p $XDG_RT_DIR
-        chmod 700 $XDG_RT_DIR 
-
-        # Create a variables file for the new .bashrc to source to pass over
-        # the flox path and set the HOME directory and XDG_RUNTIME_DIR
-        touch $VARIABLES_FILE
-        echo "export USER=${USER}" >> $VARIABLES_FILE
-        echo "export HOME=${VENV_HOME}" >> $VARIABLES_FILE
-        echo "export PATH=${FLOX_PATH}" >> $VARIABLES_FILE
-        echo "export XDG_RUNTIME_DIR=${XDG_RT_DIR}" >> $VARIABLES_FILE
-        echo "export OS_NAME=${os_name}" >> $VARIABLES_FILE
-        echo "export OS_ARCHITECTURE=${OS_ARCHITECTURE}" >> $VARIABLES_FILE
-        echo "export ARCHITECTURE=${architecture}" >> $VARIABLES_FILE
-        echo "export FLOX_TARGET=${FLOX_TARGET}" >> $VARIABLES_FILE
-        echo "export WSL=${WSL}" >> $VARIABLES_FILE
-        echo "export DOTFILES=${DOTFILES}" >> $VARIABLES_FILE
-        echo "export BASE_HOME=${HOME}" >> $VARIABLES_FILE
-        # Copy over the .bashrc file
-        cp "$ORIGINAL_BASHRC" "$VENV_HOME"
-    fi
-
     # install any extensions specified by the dotfiles
     source "./dotfiles/extensions.sh"
 
