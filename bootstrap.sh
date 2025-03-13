@@ -101,7 +101,7 @@ FLOX_SBIN=$FLOX_DEV/sbin
 # Get the PATH to our flox executable
 FLOX_PATH="${LOCAL_FLOX_BIN}:${FLOX_BIN}:${FLOX_SBIN}" #:/usr/sbin:/usr/bin
 
-# if the HOME's .bashrc file does not exist, then we run the bootstrap
+# if the HOME's .bashrc file does not exist, then we copy over the newer version
 if [ ! -f $BASHRC ]; then
     mkdir -p $VENV_HOME
     mkdir -p $VENV_HOME/.local
@@ -123,7 +123,7 @@ if [ ! -f $BASHRC ]; then
     # Create a variables file for the new .bashrc to source to pass over
     # the flox path and set the HOME directory and XDG_RUNTIME_DIR
     touch $VARIABLES_FILE
-    echo "export LC_ALL=C" >> $VARIABLES_FILE
+    echo "export LC_ALL=${LC_ALL}" >> $VARIABLES_FILE
     echo "export USER=${USER}" >> $VARIABLES_FILE
     echo "export HOME=${VENV_HOME}" >> $VARIABLES_FILE
     echo "export PATH=${FLOX_PATH}" >> $VARIABLES_FILE
